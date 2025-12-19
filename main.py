@@ -23,7 +23,10 @@ if __name__ == "__main__":
     )
     while True:
         # Afficher la partie
-        print(quoridor)
+        if args.graphique:
+            quoridor.afficher()
+        else:
+            print(quoridor)
         # Demander au joueur de choisir son prochain coup
         if args.automatique:
             # Choisir automatiquement le prochain coup
@@ -33,13 +36,6 @@ if __name__ == "__main__":
             coup, position = (
                 quoridor.sélectionner_un_coup(quoridor.état_partie()["joueurs"][0]["nom"])
                 )
-
-            # Appliquer le coup dans votre jeu
-            coup, position = quoridor.appliquer_un_coup(
-                quoridor.état_partie()["joueurs"][0]["nom"],
-                coup,
-                position,
-            )
         try:
             # Envoyer le coup au serveur
             coup, position = appliquer_un_coup(
@@ -48,6 +44,12 @@ if __name__ == "__main__":
                 position,
                 args.idul,
                 secret,
+            )
+
+            quoridor.appliquer_un_coup(
+                quoridor.état_partie()["joueurs"][0]["nom"],
+                coup,
+                position,
             )
 
             # Appliquer le coup de l'adversaire dans votre jeu
@@ -66,7 +68,10 @@ if __name__ == "__main__":
             )
             # Afficher la partie finale
             quoridor = Quoridor(état["joueurs"], état["murs"], état["tour"])
-            print(quoridor)
+            if args.graphique:
+                quoridor.afficher()
+            else:
+                print(quoridor)
             # Afficher le gagnant
             print(f"Le gagnant est {erreur}")
             # Sortir de la boucle
