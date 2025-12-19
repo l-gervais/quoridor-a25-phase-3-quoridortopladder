@@ -436,9 +436,9 @@ class Quoridor:
         voisins = list(graphe.successors(depart))
         voisins_valides = [
             v for v in voisins
-            if abs(v[0] - x0) + abs(v[1] - y0) == 1
+            if isinstance(v, tuple)
+            and abs(v[0] - x0) + abs(v[1] - y0) == 1
         ]
-
         if not voisins_valides:
             raise QuoridorError("Aucun déplacement valide possible.")
 
