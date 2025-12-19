@@ -433,6 +433,15 @@ class Quoridor:
         ):
             x, y = chemin_adv[0]
             return ('MH', [x, y + 1])
+        
+        prochain = chemin[1]
+        x0, y0 = depart
+        x1, y1 = prochain
+
+        # Vérifier déplacement simple (pas un saut)
+        if abs(x1 - x0) + abs(y1 - y0) != 1:
+            # fallback : rester en place (ou autre stratégie simple)
+            raise QuoridorError("Déplacement non adjacent détecté")
 
         return ('D', list(chemin[1]))
 
