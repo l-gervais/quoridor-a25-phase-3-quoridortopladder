@@ -405,41 +405,71 @@ class Quoridor:
 
         # Construire le graphe avec les positions actuelles
         graphe = construire_graphe(
-            [self.joueurs[ind]['position'], self.joueurs[adv]['position']],
+            [self.joueurs[0]['position'], self.joueurs[1]['position']],
             self.murs['horizontaux'],
             self.murs['verticaux']
         )
 
-        # Définir toutes les cases cibles possibles pour atteindre la ligne de victoire
-        if ind == 0:
-            cible_cases = [(i, 9) for i in range(1, 10)]  # joueur 1
-        else:
-            cible_cases = [(i, 1) for i in range(1, 10)]  # joueur 2
+        # Définir les cases cibles possibles pour chaque joueur
+        cibles_j1 = [(i, 9) for i in range(1, 10)]
+        cibles_j2 = [(i, 1) for i in range(1, 10)]
 
-        # Déplacer un mur si l'adversaire est juste devant et on a des murs
-        chemin_adv = None
-        for c in cible_cases:
-            if nx.has_path(graphe, depart_adv, c):
-                chemin_adv = nx.shortest_path(graphe, depart_adv, c)
-                break
+        # Chemin le plus court pour un joueur donné
+        def plus_court_chemin(depart, cibles):
+            chemins = [
+                nx.shortest_path(graphe, depart, c)
+                for c in cibles
+                if nx.has_path(graphe, depart, c)
+            ]
+            return min(chemins, key=len) if chemins else None
 
-        if chemin_adv and len(chemin_adv) == 2 and self.joueurs[ind]['murs'] > 0:
-            x, y = chemin_adv[0]
-            return ('MH', [x, y + 1])  # poser un mur horizontal devant l'adversaire
+        chemin_moi = plus_court_chemin(
+            depart, cibles_j1 if ind == 0 else cibles_j2
+        )
+        chemin_adv = plus_court_chemin(
+            depart_adv, cibles_j1 if adv == 0 else cibles_j2
+        )
 
-        # Trouver le chemin le plus court vers la ligne de victoire
-        chemins_valides = [
-            nx.shortest_path(graphe, depart, c)
-            for c in cible_cases if nx.has_path(graphe, depart, c)
-        ]
-        if not chemins_valides:
+        if chemin_moi is None or chemin_adv is None:
             raise QuoridorError("Aucun chemin vers la victoire n'est possible.")
 
-        chemin = min(chemins_valides, key=len)
-        prochain = chemin[1]  # prochaine case à atteindre
+        dist_moi = len(chemin_moi)
+        dist_adv = len(chemin_adv)
 
+        # --- Cas obligatoire : poser un mur pour bloquer l'adversaire ---
+        # L'adversaire est à une case de son but → longueur de chemin = 2
+        # Je suis à deux cases ou plus de mon but → longueur >= 3 (car inclut la case de départ)
+        # J'ai encore des murs et je peux placer un mur qui le bloque.
+        if dist_adv == 2 and dist_moi >= 3 and self.joueurs[ind]['murs'] > 0:
+            # On essaie de placer un mur devant l'adversaire, en testant sur une copie
+            x_adv, y_adv = chemin_adv[0]      # position actuelle de l'adversaire
+            x_suiv, y_suiv = chemin_adv[1]    # case de but immédiate
+
+            # Heuristique simple : mur horizontal entre l'adversaire et sa case de but
+            # Si l'adversaire monte (y_suiv > y_adv) → mur au-dessus
+            # S'il descend (y_suiv < y_adv) → mur en dessous
+            if y_suiv > y_adv:
+                pos_mur = [x_adv, y_suiv]
+            else:
+                pos_mur = [x_adv, y_adv]
+
+            # Tester le mur sur une copie
+            copie = Quoridor(
+                joueurs=self.joueurs,
+                murs=self.murs,
+                tour=self.tour
+            )
+            try:
+                copie.appliquer_un_coup(self.joueurs[ind]['nom'], 'MH', pos_mur)
+                # Si ça passe, on joue ce mur
+                return ('MH', pos_mur)
+            except QuoridorError:
+                # Si ce mur précis est invalide, on tombera dans le déplacement
+                pass
+
+        # --- Sinon : avancer selon le plus court chemin ---
+        prochain = chemin_moi[1]
         return ('D', list(prochain))
-
 
 def interpréter_la_ligne_de_commande():
     """Génère un interpréteur de commande.
