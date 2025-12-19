@@ -5,25 +5,27 @@ Ce programme permet de joueur au jeu Quoridor.
 
 from api import appliquer_un_coup, créer_une_partie, récupérer_une_partie
 from quoridor import Quoridor, interpréter_la_ligne_de_commande
+from quoridorx import QuoridorX
 
 # Mettre ici votre IDUL comme clé et votre Jeton comme secret.
 JETONS = {
     "viall24": "7e011e28-4b76-45a8-badf-b0b0a6d65545",
 }
 
-AUTOMATIQUE = False
-
-
 if __name__ == "__main__":
     args = interpréter_la_ligne_de_commande()
     secret = JETONS[args.idul]
     id_partie, état = créer_une_partie(args.idul, secret)
-    quoridor = Quoridor(état["joueurs"], état["murs"], état["tour"])
+    quoridor = (
+    QuoridorX(état["joueurs"], état["murs"], état["tour"])
+    if args.graphique
+    else Quoridor(état["joueurs"], état["murs"], état["tour"])
+    )
     while True:
         # Afficher la partie
         print(quoridor)
         # Demander au joueur de choisir son prochain coup
-        if AUTOMATIQUE:
+        if args.automatique:
             # Choisir automatiquement le prochain coup
             coup, position = quoridor.jouer_un_coup(quoridor.état_partie()["joueurs"][0]["nom"])
         else:
