@@ -412,7 +412,7 @@ class Quoridor:
         graphe = construire_graphe(
             [
                 self.joueurs[ind]['position'],
-                self.joueurs[1 - ind]['position']
+                self.joueurs[adv]['position']
             ],
             self.murs['horizontaux'],
             self.murs['verticaux']
@@ -427,23 +427,27 @@ class Quoridor:
         chemin = nx.shortest_path(graphe, depart, cible)
         chemin_adv = nx.shortest_path(graphe, depart_adv, cible_adv)
 
-        if (
-            len(chemin_adv) == 2
-            and self.joueurs[ind]['murs'] > 0
-        ):
+        if len(chemin_adv) == 2 and self.joueurs[ind]['murs'] > 0:
             x, y = chemin_adv[0]
             return ('MH', [x, y + 1])
-        
-        prochain = chemin[1]
+
         x0, y0 = depart
-        x1, y1 = prochain
 
-        # Vérifier déplacement simple (pas un saut)
-        if abs(x1 - x0) + abs(y1 - y0) != 1:
-            # fallback : rester en place (ou autre stratégie simple)
-            raise QuoridorError("Déplacement non adjacent détecté")
+        voisins = list(graphe.successors(depart))
+        voisins_valides = [
+            v for v in voisins
+            if abs(v[0] - x0) + abs(v[1] - y0) == 1
+        ]
 
-        return ('D', list(chemin[1]))
+        if not voisins_valides:
+            raise QuoridorError("Aucun déplacement valide possible.")
+
+        prochain = min(
+            voisins_valides,
+            key=lambda v: nx.shortest_path_length(graphe, v, cible)
+        )
+
+        return ('D', list(prochain))
 
 
 def interpréter_la_ligne_de_commande():
