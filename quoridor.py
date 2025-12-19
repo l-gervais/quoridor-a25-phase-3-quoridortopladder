@@ -383,69 +383,60 @@ class Quoridor:
     def jouer_un_coup(self, joueur):
         """Jouer un coup automatique pour un joueur.
 
-        Pour le joueur spécifié, jouer automatiquement son meilleur coup pour l'état actuel
-        de la partie. Ce coup est soit le déplacement de son jeton, soit le placement d'un
-        mur horizontal ou vertical.
-
         Args:
-            joueur (str): le nom du joueur.
-
-        Raises:
-            QuoridorError: Le joueur n'existe pas.
-            QuoridorError: La partie est déjà terminée.
+            joueur (str): Le nom du joueur.
 
         Returns:
-            tuple: Un tuple composé d'un type de coup et de la position.
-               Le type de coup est une chaîne de caractères.
-               La position est une liste de 2 entier [x, y].
+            tuple: Un tuple (type_de_coup, position), par exemple ('D', [x, y]).
         """
-        #verif joueur existe
+        # Vérifier que le joueur existe
         if joueur != self.joueurs[0]['nom'] and joueur != self.joueurs[1]['nom']:
             raise QuoridorError("Le joueur n'existe pas.")
 
+        # Vérifier si la partie est terminée
         if self.partie_terminée():
             raise QuoridorError("La partie est déjà terminée.")
 
         ind = 0 if joueur == self.joueurs[0]['nom'] else 1
         adv = 1 - ind
 
+        depart = tuple(self.joueurs[ind]['position'])
+        depart_adv = tuple(self.joueurs[adv]['position'])
+
+        # Construire le graphe avec les positions actuelles
         graphe = construire_graphe(
-            [
-                self.joueurs[ind]['position'],
-                self.joueurs[adv]['position']
-            ],
+            [self.joueurs[ind]['position'], self.joueurs[adv]['position']],
             self.murs['horizontaux'],
             self.murs['verticaux']
         )
 
-        cible = 'B1' if ind == 0 else 'B2'
-        cible_adv = 'B2' if ind == 0 else 'B1'
+        # Définir toutes les cases cibles possibles pour atteindre la ligne de victoire
+        if ind == 0:
+            cible_cases = [(i, 9) for i in range(1, 10)]  # joueur 1
+        else:
+            cible_cases = [(i, 1) for i in range(1, 10)]  # joueur 2
 
-        depart = tuple(self.joueurs[ind]['position'])
-        depart_adv = tuple(self.joueurs[adv]['position'])
+        # Déplacer un mur si l'adversaire est juste devant et on a des murs
+        chemin_adv = None
+        for c in cible_cases:
+            if nx.has_path(graphe, depart_adv, c):
+                chemin_adv = nx.shortest_path(graphe, depart_adv, c)
+                break
 
-        chemin = nx.shortest_path(graphe, depart, cible)
-        chemin_adv = nx.shortest_path(graphe, depart_adv, cible_adv)
-
-        if len(chemin_adv) == 2 and self.joueurs[ind]['murs'] > 0:
+        if chemin_adv and len(chemin_adv) == 2 and self.joueurs[ind]['murs'] > 0:
             x, y = chemin_adv[0]
-            return ('MH', [x, y + 1])
+            return ('MH', [x, y + 1])  # poser un mur horizontal devant l'adversaire
 
-        x0, y0 = depart
-
-        voisins = list(graphe.successors(depart))
-        voisins_valides = [
-            v for v in voisins
-            if isinstance(v, tuple)
-            and abs(v[0] - x0) + abs(v[1] - y0) == 1
+        # Trouver le chemin le plus court vers la ligne de victoire
+        chemins_valides = [
+            nx.shortest_path(graphe, depart, c)
+            for c in cible_cases if nx.has_path(graphe, depart, c)
         ]
-        if not voisins_valides:
-            raise QuoridorError("Aucun déplacement valide possible.")
+        if not chemins_valides:
+            raise QuoridorError("Aucun chemin vers la victoire n'est possible.")
 
-        prochain = min(
-            voisins_valides,
-            key=lambda v: nx.shortest_path_length(graphe, v, cible)
-        )
+        chemin = min(chemins_valides, key=len)
+        prochain = chemin[1]  # prochaine case à atteindre
 
         return ('D', list(prochain))
 
