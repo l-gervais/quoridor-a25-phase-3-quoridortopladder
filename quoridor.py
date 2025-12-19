@@ -400,33 +400,38 @@ class Quoridor:
                La position est une liste de 2 entier [x, y].
         """
         #verif joueur existe
-        if joueur != self.joueurs[0]['nom'] and joueur != self.joueurs[1]['noms']:
+        if joueur != self.joueurs[0]['nom'] and joueur != self.joueurs[1]['nom']:
             raise QuoridorError("Le joueur n'existe pas.")
-        #verif partie terminée
+
         if self.partie_terminée():
             raise QuoridorError("La partie est déjà terminée.")
 
-        #determiner quel joueur joue
         ind = 0 if joueur == self.joueurs[0]['nom'] else 1
+        adv = 1 - ind
 
-        #construire graphe
-        graphe = (
-            construire_graphe([self.joueurs[1]['position'], self.joueurs[0]['position']],
-            self.murs['horizontaux'], self.murs['verticaux'])
-            )
+        graphe = construire_graphe(
+        [self.joueurs[0]['position'], self.joueurs[1]['position']],
+        self.murs['horizontaux'],
+        self.murs['verticaux']
+        )
 
-        #identifier la cible
         cible = 'B1' if ind == 0 else 'B2'
+        cible_adv = 'B2' if ind == 0 else 'B1'
 
-        # position de depart
         depart = tuple(self.joueurs[ind]['position'])
+        depart_adv = tuple(self.joueurs[adv]['position'])
 
-        #chemin le plus court
         chemin = nx.shortest_path(graphe, depart, cible)
+        chemin_adv = nx.shortest_path(graphe, depart_adv, cible_adv)
 
-        #appliquer le deplacement
-        self.appliquer_un_coup(joueur, 'D', chemin[1])
-        return ('D', chemin[1])
+        if (
+            len(chemin_adv) == 2
+            and self.joueurs[ind]['murs'] > 0
+        ):
+            x, y = chemin_adv[0]
+            return ('MH', [x, y + 1])
+
+        return ('D', list(chemin[1]))
 
 
 def interpréter_la_ligne_de_commande():
