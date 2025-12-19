@@ -442,9 +442,17 @@ def interpréter_la_ligne_de_commande():
                    Cette objet aura l'attribut «idul» représentant l'idul du joueur.
     """
     parser = argparse.ArgumentParser(prog="main.py", description="Quoridor")
-    parser.add_argument("idul", help="IDUL du joueur")
 
-    # Complétez le code ici
-    # vous pourriez aussi avoir à ajouter des arguments dans ArgumentParser(...)
+    parser.add_argument("idul", help="IDUL du joueur")
+    parser.add_argument(
+        "-a", "--automatique",
+        action="store_true",
+        help="Activer le mode automatique."
+    )
+    parser.add_argument(
+        "-x", "--graphique",
+        action="store_true",
+        help="Activer le mode graphique."
+    )
 
     return parser.parse_args()
