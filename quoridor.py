@@ -410,9 +410,12 @@ class Quoridor:
         adv = 1 - ind
 
         graphe = construire_graphe(
-        [self.joueurs[0]['position'], self.joueurs[1]['position']],
-        self.murs['horizontaux'],
-        self.murs['verticaux']
+            [
+                self.joueurs[ind]['position'],
+                self.joueurs[1 - ind]['position']
+            ],
+            self.murs['horizontaux'],
+            self.murs['verticaux']
         )
 
         cible = 'B1' if ind == 0 else 'B2'
