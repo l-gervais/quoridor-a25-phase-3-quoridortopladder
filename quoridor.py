@@ -381,7 +381,7 @@ class Quoridor:
         return False
 
     def jouer_un_coup(self, joueur):
-        if joueur != self.joueurs[0]['nom'] and joueur != self.joueurs[1]['nom']:
+        if joueur not in (self.joueurs[0]['nom'], self.joueurs[1]['nom']):
             raise QuoridorError("Le joueur n'existe pas.")
 
         if self.partie_terminée():
@@ -390,7 +390,7 @@ class Quoridor:
         ind = 0 if joueur == self.joueurs[0]['nom'] else 1
         adv = 1 - ind
 
-        positions = [i['position'] for i in self.joueurs]
+        positions = [j['position'] for j in self.joueurs]
 
         graphe = construire_graphe(
             positions,
@@ -408,30 +408,57 @@ class Quoridor:
         dist_adv = nx.shortest_path_length(graphe, source_adv, cible_adv)
 
         # ==================================================
-        # CAS OBLIGATOIRE : PLACER UN MUR
+        # 1. VICTOIRE IMMÉDIATE
+        # ==================================================
+        if dist_joueur <= 2:
+            chemin = nx.shortest_path(graphe, source, cible)
+            x, y = chemin[1]
+            return 'D', [x, y]
+
+        # ==================================================
+        # 2. BLOCAGE OBLIGATOIRE (LOGIQUE CORRECTE)
         # ==================================================
         if (
-            dist_adv == 1
-            and dist_joueur >= 2
+            dist_adv <= 2
+            and dist_joueur >= 3
             and self.joueurs[ind]['murs'] > 0
         ):
-            x, y = source_adv
+            état = self.état_partie()
 
-            # mur juste devant l'adversaire
-            mur_pos = [x, y]
+            # tester TOUS les murs possibles
+            for x in range(1, 9):
+                for y in range(1, 9):
+                    for coup in ('MH', 'MV'):
+                        copie = Quoridor(
+                            état['joueurs'],
+                            état['murs'],
+                            état['tour']
+                        )
+                        try:
+                            copie.appliquer_un_coup(joueur, coup, [x, y])
 
-            try:
-                return self.appliquer_un_coup(joueur, 'MH', mur_pos)
-            except QuoridorError:
-                pass  # mur invalide → on se déplacera
+                            # recalculer la distance adverse
+                            g2 = construire_graphe(
+                                [j['position'] for j in copie.joueurs],
+                                copie.murs['horizontaux'],
+                                copie.murs['verticaux']
+                            )
+                            new_dist = nx.shortest_path_length(
+                                g2, source_adv, cible_adv
+                            )
+
+                            if new_dist > dist_adv:
+                                return coup, [x, y]
+
+                        except QuoridorError:
+                            pass
 
         # ==================================================
-        # DÉPLACEMENT NORMAL
+        # 3. DÉPLACEMENT PAR DÉFAUT
         # ==================================================
         chemin = nx.shortest_path(graphe, source, cible)
-        prochaine = chemin[1]
-
-        return ('D', [prochaine[0], prochaine[1]])
+        x, y = chemin[1]
+        return 'D', [x, y]
 
 def interpréter_la_ligne_de_commande():
     """Génère un interpréteur de commande.
