@@ -18,6 +18,7 @@ class QuoridorX(Quoridor):
         self.pen.clear()
         self.dessiner_damier()
         self.dessiner_pions()
+        self.dessiner_murs()
         self.screen.update()
 
     def dessiner_damier(self):
@@ -37,3 +38,40 @@ class QuoridorX(Quoridor):
             self.pen.up()
             self.pen.goto(-135 + (x-0.5)*30, -135 + (y-0.5)*30)
             self.pen.dot(20, couleurs[i])
+
+    def dessiner_murs(self):
+        taille = 30
+        self.pen.color("black")
+        self.pen.fillcolor("gray")
+        self.pen.up()
+
+        # murs horizontaux
+        for x, y in self.murs.get('horizontaux', []):
+            # position centrale du mur
+            cx = -135 + (x + 0.5) * taille
+            cy = -135 + (y - 0.5) * taille
+            self.pen.goto(cx - taille, cy - 5)
+            self.pen.down()
+            self.pen.begin_fill()
+            for _ in range(2):
+                self.pen.forward(taille*2)
+                self.pen.left(90)
+                self.pen.forward(10)
+                self.pen.left(90)
+            self.pen.end_fill()
+            self.pen.up()
+
+        # murs verticaux
+        for x, y in self.murs.get('verticaux', []):
+            cx = -135 + (x - 0.5) * taille
+            cy = -135 + (y + 0.5) * taille
+            self.pen.goto(cx - 5, cy - taille)
+            self.pen.down()
+            self.pen.begin_fill()
+            for _ in range(2):
+                self.pen.forward(10)
+                self.pen.left(90)
+                self.pen.forward(taille*2)
+                self.pen.left(90)
+            self.pen.end_fill()
+            self.pen.up()
