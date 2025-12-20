@@ -418,10 +418,7 @@ class Quoridor:
             x, y = source_adv
 
             # mur juste devant l'adversaire
-            if adv == 1:      # adversaire va vers y=1
-                mur_pos = [x, y]
-            else:             # adversaire va vers y=9
-                mur_pos = [x, y + 1]
+            mur_pos = [x, y]
 
             try:
                 return self.appliquer_un_coup(joueur, 'MH', mur_pos)
