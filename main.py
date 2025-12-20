@@ -1,13 +1,7 @@
-"""Jeu Quoridor
-
-Ce programme permet de joueur au jeu Quoridor.
-"""
-
 from api import appliquer_un_coup, créer_une_partie, récupérer_une_partie
 from quoridor import Quoridor, interpréter_la_ligne_de_commande
 from quoridorx import QuoridorX
 
-# Mettre ici votre IDUL comme clé et votre Jeton comme secret.
 JETONS = {
     "viall24": "7e011e28-4b76-45a8-badf-b0b0a6d65545",
 }
@@ -15,64 +9,89 @@ JETONS = {
 if __name__ == "__main__":
     args = interpréter_la_ligne_de_commande()
     secret = JETONS[args.idul]
+
     id_partie, état = créer_une_partie(args.idul, secret)
+
     quoridor = (
-    QuoridorX(état["joueurs"], état["murs"], état["tour"])
-    if args.graphique
-    else Quoridor(état["joueurs"], état["murs"], état["tour"])
+        QuoridorX(état["joueurs"], état["murs"], état["tour"])
+        if args.graphique
+        else Quoridor(état["joueurs"], état["murs"], état["tour"])
     )
+
     while True:
-        # Afficher la partie
+        print(quoridor)
         if args.graphique:
             quoridor.afficher()
-        else:
-            print(quoridor)
-        # Demander au joueur de choisir son prochain coup
-        if args.automatique:
-            # Choisir automatiquement le prochain coup
-            coup, position = quoridor.jouer_un_coup(quoridor.état_partie()["joueurs"][0]["nom"])
-        else:
-            # Laisser le joueur choisir son prochain coup
-            coup, position = (
-                quoridor.sélectionner_un_coup(quoridor.état_partie()["joueurs"][0]["nom"])
-                )
-        try:
-            # Envoyer le coup au serveur
-            coup, position = appliquer_un_coup(
-                id_partie,
-                coup,
-                position,
-                args.idul,
-                secret,
-            )
 
-            quoridor.appliquer_un_coup(
+        if args.automatique:
+            try:
+                # 1. choisir le coup du joueur
+                coup_joueur, position_joueur = quoridor.jouer_un_coup(
+                    quoridor.état_partie()["joueurs"][0]["nom"]
+                )
+
+                # 2. appliquer le coup du joueur localement
+                quoridor.appliquer_un_coup(
+                    quoridor.état_partie()["joueurs"][0]["nom"],
+                    coup_joueur,
+                    position_joueur,
+                )
+
+                # 3. envoyer le coup au serveur
+                coup_robot, position_robot = appliquer_un_coup(
+                    id_partie,
+                    coup_joueur,
+                    position_joueur,
+                    args.idul,
+                    secret,
+                )
+
+                # 4. appliquer le coup du robot localement
+                quoridor.appliquer_un_coup(
+                    quoridor.état_partie()["joueurs"][1]["nom"],
+                    coup_robot,
+                    position_robot,
+                )
+
+            except StopIteration as erreur:
+                print(quoridor)
+                print(f"Le gagnant est {erreur}")
+                break
+
+            continue
+        
+        else:
+            coup, position = quoridor.sélectionner_un_coup(
+                quoridor.état_partie()["joueurs"][0]["nom"]
+            )
+            coup, position = quoridor.appliquer_un_coup(
                 quoridor.état_partie()["joueurs"][0]["nom"],
                 coup,
                 position,
             )
 
-            # Appliquer le coup de l'adversaire dans votre jeu
+        try:
+            coup, position = appliquer_un_coup(
+                id_partie,
+                coup_joueur,
+                position_joueur,
+                args.idul,
+                secret,
+            )
+
             coup, position = quoridor.appliquer_un_coup(
                 quoridor.état_partie()["joueurs"][1]["nom"],
                 coup,
                 position,
             )
+
         except StopIteration as erreur:
-            # Si le jeu est terminé
-            # Récupérer la partie finale
             id_partie, état, gagnant = récupérer_une_partie(
                 id_partie,
                 args.idul,
                 secret,
             )
-            # Afficher la partie finale
             quoridor = Quoridor(état["joueurs"], état["murs"], état["tour"])
-            if args.graphique:
-                quoridor.afficher()
-            else:
-                print(quoridor)
-            # Afficher le gagnant
+            print(quoridor)
             print(f"Le gagnant est {erreur}")
-            # Sortir de la boucle
             break
