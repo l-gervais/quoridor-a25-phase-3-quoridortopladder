@@ -388,22 +388,53 @@ class Quoridor:
             raise QuoridorError("La partie est déjà terminée.")
 
         ind = 0 if joueur == self.joueurs[0]['nom'] else 1
+        adv = 1 - ind
 
         positions = [i['position'] for i in self.joueurs]
+
         graphe = construire_graphe(
             positions,
             self.murs['horizontaux'],
             self.murs['verticaux']
         )
 
-        cible = 'B1' if ind == 0 else 'B2'
         source = tuple(self.joueurs[ind]['position'])
+        source_adv = tuple(self.joueurs[adv]['position'])
 
-        chemin = nx.shortest_path(graphe, source=source, target=cible)
+        cible = 'B1' if ind == 0 else 'B2'
+        cible_adv = 'B2' if ind == 0 else 'B1'
+
+        dist_joueur = nx.shortest_path_length(graphe, source, cible)
+        dist_adv = nx.shortest_path_length(graphe, source_adv, cible_adv)
+
+        # ==================================================
+        # CAS OBLIGATOIRE : PLACER UN MUR
+        # ==================================================
+        if (
+            dist_adv == 1
+            and dist_joueur >= 2
+            and self.joueurs[ind]['murs'] > 0
+        ):
+            x, y = source_adv
+
+            # mur juste devant l'adversaire
+            if adv == 1:      # adversaire va vers y=1
+                mur_pos = [x, y]
+            else:             # adversaire va vers y=9
+                mur_pos = [x, y + 1]
+
+            try:
+                return self.appliquer_un_coup(joueur, 'MH', mur_pos)
+            except QuoridorError:
+                pass  # mur invalide → on se déplacera
+
+        # ==================================================
+        # DÉPLACEMENT NORMAL
+        # ==================================================
+        chemin = nx.shortest_path(graphe, source, cible)
         prochaine = chemin[1]
 
-        return self.appliquer_un_coup(joueur, 'D', [prochaine[0], prochaine[1]])
-
+        return ('D', [prochaine[0], prochaine[1]])
 
 def interpréter_la_ligne_de_commande():
     """Génère un interpréteur de commande.
