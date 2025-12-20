@@ -61,13 +61,13 @@ if __name__ == "__main__":
             continue
         
         else:
-            coup, position = quoridor.sélectionner_un_coup(
+            coup_joueur, position_joueur = quoridor.sélectionner_un_coup(
                 quoridor.état_partie()["joueurs"][0]["nom"]
             )
-            coup, position = quoridor.appliquer_un_coup(
+            coup_joueur, position_joueur = quoridor.appliquer_un_coup(
                 quoridor.état_partie()["joueurs"][0]["nom"],
-                coup,
-                position,
+                coup_joueur,
+                position_joueur,
             )
 
         try:
