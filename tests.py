@@ -162,6 +162,7 @@ if __name__ == "__main__":
 
 #test fct placer_un_mur:
 def test_fct_placer_un_mur(joueur, position, orientation):
+    """test fct plscer un mur"""
     joueurs = [
             {"nom": "Robin", "murs": 10, "position": [5, 1]},
             {"nom": "Al", "murs": 10, "position": [5, 9]},

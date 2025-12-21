@@ -1,3 +1,6 @@
+"""Quoridor Phase 3"""
+
+
 import turtle
 from quoridor import Quoridor, QuoridorError
 
@@ -51,6 +54,7 @@ class QuoridorX(Quoridor):
     # AFFICHAGE
     # ==========================================================
     def afficher(self):
+        """Afficher"""
         self.pen.clear()
         self.msg.clear()
 
@@ -63,6 +67,7 @@ class QuoridorX(Quoridor):
         self.screen.update()
 
     def dessiner_damier(self):
+        """Dessiner damier"""
         for i in range(10):
             self.pen.goto(self.orig_x + i * self.case, self.orig_y)
             self.pen.pendown()
@@ -75,6 +80,7 @@ class QuoridorX(Quoridor):
             self.pen.penup()
 
     def dessiner_joueurs(self):
+        """Dessiner joueur"""
         couleurs = ["blue", "red"]
         for i, j in enumerate(self.joueurs):
             x, y = j["position"]
@@ -85,6 +91,7 @@ class QuoridorX(Quoridor):
                            font=("Arial", 24, "bold"))
 
     def dessiner_murs(self):
+        """Dessiner mur"""
         self.pen.color("brown")
         self.pen.width(4)
 
@@ -106,6 +113,7 @@ class QuoridorX(Quoridor):
         self.pen.width(1)
 
     def dessiner_legende(self):
+        """Dessiner legende"""
         self.pen.goto(-360, 260)
         self.pen.color("black")
         self.pen.write(
@@ -116,6 +124,7 @@ class QuoridorX(Quoridor):
         )
 
     def afficher_message(self):
+        """Afficher message"""
         if self.message_erreur:
             self.msg.goto(-360, -300)
             self.msg.color("red")
@@ -126,11 +135,13 @@ class QuoridorX(Quoridor):
     # INTERACTION UTILISATEUR
     # ==========================================================
     def set_orientation(self, o):
+        """Orientation"""
         self.orientation_mur = o
         self.message_erreur = ""
         self.afficher()
 
     def clic(self, x, y):
+        """clic"""
         case_x = round((x - self.orig_x) / self.case + 0.5)
         case_y = round((y - self.orig_y) / self.case + 0.5)
 
@@ -179,11 +190,13 @@ class QuoridorX(Quoridor):
     # UTILITAIRE
     # ==========================================================
     def coord_case(self, x, y):
+        """Coord_case"""
         px = self.orig_x + (x - 1) * self.case + self.case / 2
         py = self.orig_y + (y - 1) * self.case + self.case / 2
         return px, py
-    
+
     def afficher_gagnant(self, gagnant):
+        """affiche le gagnant"""
         self.pen.clear()
         self.msg.clear()
         self.dessiner_damier()

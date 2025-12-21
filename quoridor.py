@@ -42,7 +42,7 @@ class Quoridor:
             murs (Dict, optionnel): Un dictionnaire contenant une clé 'horizontaux' associée à
                 la liste des positions [x, y] des murs horizontaux, et une clé 'verticaux'
                 associée à la liste des positions [x, y] des murs verticaux.
-            tour (int, optionnel): 
+            tour (int, optionnel):
             Un entier positif représentant le tour du jeu (1 pour le premier tour).
         """
         self.tour = tour
@@ -381,6 +381,7 @@ class Quoridor:
         return False
 
     def jouer_un_coup(self, joueur):
+        """Jouer un coup"""
         if joueur not in (self.joueurs[0]['nom'], self.joueurs[1]['nom']):
             raise QuoridorError("Le joueur n'existe pas.")
 
@@ -482,5 +483,4 @@ def interpréter_la_ligne_de_commande():
     )
 
     return parser.parse_args()
-
 
