@@ -90,18 +90,19 @@ class QuoridorX(Quoridor):
 
         for x, y in self.murs["horizontaux"]:
             px, py = self.coord_case(x, y)
+            py -= self.case / 2
             self.pen.goto(px - self.case / 2, py)
             self.pen.pendown()
             self.pen.goto(px + self.case * 1.5, py)
             self.pen.penup()
 
         for x, y in self.murs["verticaux"]:
-            px, py = self.coord_case(x, y)
+            px, py = self.coord_case(x - 1, y)
+            px += self.case / 2
             self.pen.goto(px, py - self.case / 2)
             self.pen.pendown()
             self.pen.goto(px, py + self.case * 1.5)
             self.pen.penup()
-
         self.pen.width(1)
 
     def dessiner_legende(self):
