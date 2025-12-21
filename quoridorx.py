@@ -182,3 +182,19 @@ class QuoridorX(Quoridor):
         px = self.orig_x + (x - 1) * self.case + self.case / 2
         py = self.orig_y + (y - 1) * self.case + self.case / 2
         return px, py
+    
+    def afficher_gagnant(self, gagnant):
+        self.pen.clear()
+        self.msg.clear()
+        self.dessiner_damier()
+        self.dessiner_murs()
+        self.dessiner_joueurs()
+        self.msg.goto(0, 0)
+        self.msg.color("black")
+        self.msg.write(
+        f"{gagnant}",
+        align="center",
+        font=("Arial", 24, "bold")
+        )
+        self.screen.update()
+        self.screen.mainloop()

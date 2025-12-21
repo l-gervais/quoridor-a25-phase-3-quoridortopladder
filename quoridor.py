@@ -482,3 +482,5 @@ def interpréter_la_ligne_de_commande():
     )
 
     return parser.parse_args()
+
+
