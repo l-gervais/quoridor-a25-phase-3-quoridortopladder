@@ -1,5 +1,3 @@
-"""Quoridor Main"""
-
 from api import appliquer_un_coup, créer_une_partie, récupérer_une_partie
 from quoridor import Quoridor, interpréter_la_ligne_de_commande
 from quoridorx import QuoridorX
@@ -61,7 +59,7 @@ if __name__ == "__main__":
                 break
 
             continue
-
+        
         else:
             coup_joueur, position_joueur = quoridor.sélectionner_un_coup(
                 quoridor.état_partie()["joueurs"][0]["nom"]
@@ -97,4 +95,3 @@ if __name__ == "__main__":
             print(quoridor)
             print(f"Le gagnant est {erreur}")
             break
-

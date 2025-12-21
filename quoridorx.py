@@ -29,7 +29,7 @@ class QuoridorX(Quoridor):
         self.screen.onkey(lambda: self.changer_mode('M'), "m")  # pour poser mur
         self.screen.listen()
 
-                                        #  AFFICHAGE  #
+    # ------------------ AFFICHAGE ------------------ #
     def afficher(self):
         self.pen.clear()
         self.dessiner_damier()
@@ -63,8 +63,7 @@ class QuoridorX(Quoridor):
         for i, joueur in enumerate(self.joueurs):
             x, y = joueur["position"]
             self.pen.up()
-            self.pen.goto(self.offset + (x-0.5)*self.taille_case, self.offset + 
-                          (y-0.5)*self.taille_case)
+            self.pen.goto(self.offset + (x-0.5)*self.taille_case, self.offset + (y-0.5)*self.taille_case)
             self.pen.dot(self.taille_case*0.6, couleurs[i])
 
     def dessiner_murs(self):
@@ -72,20 +71,17 @@ class QuoridorX(Quoridor):
         # murs horizontaux
         for x, y in self.murs['horizontaux']:
             self.pen.up()
-            self.pen.goto(self.offset + (x-1)*self.taille_case, self.offset + 
-                          (y-1)*self.taille_case + self.taille_case/2)
+            self.pen.goto(self.offset + (x-1)*self.taille_case, self.offset + (y-1)*self.taille_case + self.taille_case/2)
             self.pen.down()
             self.pen.forward(2*self.taille_case)
         # murs verticaux
         for x, y in self.murs['verticaux']:
             self.pen.up()
-            self.pen.goto(self.offset + (x-1)*self.taille_case + 
-                          self.taille_case/2, self.offset + (y-1)*self.taille_case)
+            self.pen.goto(self.offset + (x-1)*self.taille_case + self.taille_case/2, self.offset + (y-1)*self.taille_case)
             self.pen.down()
-            self.pen.goto(self.offset + (x-1)*self.taille_case + 
-                          self.taille_case/2, self.offset + (y+1)*self.taille_case)
+            self.pen.goto(self.offset + (x-1)*self.taille_case + self.taille_case/2, self.offset + (y+1)*self.taille_case)
 
-                                            #  INTERACTION  #
+    # ------------------ INTERACTION ------------------ #
     def changer_orientation(self, orientation):
         """Changer l'orientation du mur à placer"""
         self.orientation_mur = orientation
@@ -134,7 +130,7 @@ class QuoridorX(Quoridor):
         except QuoridorError as e:
             print(f"Erreur: {e}")
 
-                                        # BOT #
+    # BOT #
     def jouer_tour_bot(self):
         if self.partie_terminée():
             print("Partie terminée !")
@@ -148,7 +144,7 @@ class QuoridorX(Quoridor):
         except QuoridorError as err:
             print(f"Erreur bot: {err}")
 
-                                        # IA #
+    #IA#
     def jouer_un_coup(self, joueur):
         ind = 0 if joueur == self.joueurs[0]['nom'] else 1
         positions = [i['position'] for i in self.joueurs]
@@ -174,5 +170,3 @@ class QuoridorX(Quoridor):
                 return 'V', [x, y]  # vertical
         else:
             return 'D', [prochaine[0], prochaine[1]]
-        
-        
