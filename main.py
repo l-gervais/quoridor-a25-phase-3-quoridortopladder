@@ -28,19 +28,16 @@ if __name__ == "__main__":
 
         if args.automatique:
             try:
-                # 1. choisir le coup du joueur
                 coup_joueur, position_joueur = quoridor.jouer_un_coup(
                     quoridor.état_partie()["joueurs"][0]["nom"]
                 )
 
-                # 2. appliquer le coup du joueur localement
                 quoridor.appliquer_un_coup(
                     quoridor.état_partie()["joueurs"][0]["nom"],
                     coup_joueur,
                     position_joueur,
                 )
 
-                # 3. envoyer le coup au serveur
                 coup_robot, position_robot = appliquer_un_coup(
                     id_partie,
                     coup_joueur,
@@ -49,7 +46,6 @@ if __name__ == "__main__":
                     secret,
                 )
 
-                # 4. appliquer le coup du robot localement
                 quoridor.appliquer_un_coup(
                     quoridor.état_partie()["joueurs"][1]["nom"],
                     coup_robot,

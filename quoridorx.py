@@ -8,41 +8,37 @@ from quoridor import Quoridor, QuoridorError
 class QuoridorX(Quoridor):
     """Version graphique interactive de Quoridor (turtle)."""
 
-    # ==========================================================
-    # CONSTRUCTEUR
-    # ==========================================================
     def __init__(self, joueurs, murs=None, tour=1):
         super().__init__(joueurs, murs, tour)
 
-        # fenêtre
+
         self.screen = turtle.Screen()
         self.screen.title("QuoridorX")
         self.screen.setup(800, 800)
         self.screen.tracer(0)
 
-        # stylo principal
+
         self.pen = turtle.Turtle()
         self.pen.hideturtle()
         self.pen.speed(0)
         self.pen.penup()
 
-        # stylo messages
+
         self.msg = turtle.Turtle()
         self.msg.hideturtle()
         self.msg.penup()
 
-        # paramètres graphiques
         self.case = 60
         self.orig_x = -240
         self.orig_y = -240
 
-        # état interaction
+
         self.coup_prêt = False
         self.position_coup = None
         self.orientation_mur = "MH"
         self.message_erreur = ""
 
-        # événements
+
         self.screen.onclick(self.clic)
         self.screen.onkey(lambda: self.set_orientation("MH"), "h")
         self.screen.onkey(lambda: self.set_orientation("MV"), "v")
@@ -50,9 +46,7 @@ class QuoridorX(Quoridor):
 
         self.afficher()
 
-    # ==========================================================
-    # AFFICHAGE
-    # ==========================================================
+
     def afficher(self):
         """Afficher"""
         self.pen.clear()
@@ -131,9 +125,7 @@ class QuoridorX(Quoridor):
             self.msg.write(self.message_erreur,
                            font=("Arial", 12, "bold"))
 
-    # ==========================================================
-    # INTERACTION UTILISATEUR
-    # ==========================================================
+
     def set_orientation(self, o):
         """Orientation"""
         self.orientation_mur = o
@@ -149,9 +141,7 @@ class QuoridorX(Quoridor):
             self.position_coup = [case_x, case_y]
             self.coup_prêt = True
 
-    # ==========================================================
-    # MÉTHODE CLÉ : sélection du coup (graphique)
-    # ==========================================================
+
     def sélectionner_un_coup(self, joueur):
         while True:
             self.coup_prêt = False
@@ -161,7 +151,7 @@ class QuoridorX(Quoridor):
             while not self.coup_prêt:
                 self.screen.update()
 
-            # tester sur une COPIE
+
             état = self.état_partie()
             copie = Quoridor(
                 joueurs=état["joueurs"],
@@ -183,12 +173,10 @@ class QuoridorX(Quoridor):
                     return self.orientation_mur, self.position_coup
 
                 except QuoridorError as err:
-                    # erreur attrapée → affichée → on recommence
+
                     self.message_erreur = str(err)
 
-    # ==========================================================
-    # UTILITAIRE
-    # ==========================================================
+
     def coord_case(self, x, y):
         """Coord_case"""
         px = self.orig_x + (x - 1) * self.case + self.case / 2

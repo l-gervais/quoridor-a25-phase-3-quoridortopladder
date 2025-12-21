@@ -110,7 +110,7 @@ class Quoridor:
             if y == 1:
                 break
 
-            # ligne des murs horizontaux / séparateurs
+
             lignesm = "  |"
             for x in range(1, 10):
                 left_h = (x - 1, y) in mh
@@ -118,12 +118,11 @@ class Quoridor:
                 right_v = (x + 1, y - 1) in mv
 
                 if left_h:
-                    # when a horizontal wall starts to the left we only add a small spacer or a '|'
                     segment = "|" if right_v else " "
                 else:
-                    # otherwise either draw the horizontal wall or empty space
+
                     segment = "-------" if here_h else "   "
-                    # if we didn't draw the horizontal wall, append a possible vertical separator
+
                     if not here_h:
                         segment += "|" if right_v else " "
                 lignesm += segment
@@ -159,7 +158,7 @@ class Quoridor:
             QuoridorError: La position est invalide pour l'état actuel du jeu.
         """
         x, y = position
-        #verifier si position valide
+
         if x < 1 or x > 9 or y < 1 or y > 9:
             raise QuoridorError("La position est invalide (en dehors du damier).")
 
@@ -196,7 +195,6 @@ class Quoridor:
             QuoridorError: Vous ne pouvez pas enfermer un joueur.
         """
 
-        #code pour les erreurs:
 
         x = position[0]
         y = position[1]
@@ -209,10 +207,9 @@ class Quoridor:
         else:
             ind = 1
 
-        if self.joueurs[ind]['murs'] == 0: #aucun murs restant
+        if self.joueurs[ind]['murs'] == 0:
             raise QuoridorError('Le joueur a déjà placé tous ses murs.')
 
-        #toutes les autres erreurs possible sauf enfermement d'un joueur
         if orientation == 'MH':
             if y <= 1 or y > 9 or x < 1 or x >=9:
                 raise QuoridorError('La position est invalide (en dehors du damier).')
@@ -237,7 +234,6 @@ class Quoridor:
                 ):
                 raise QuoridorError('Un mur occupe déjà cette position.')
 
-        #enfermement d'un joueur
 
         if orientation == 'MH':
             murs_temp['horizontaux'].append(position)
@@ -258,7 +254,6 @@ class Quoridor:
         ):
             raise QuoridorError('Vous ne pouvez pas enfermer un joueur.')
 
-        #placer le mur si valide:
 
         if orientation == 'MH':
             murs['horizontaux'].append(position)
@@ -369,12 +364,10 @@ class Quoridor:
         Returns:
             str/bool: Le nom du gagnant si la partie est terminée; False autrement.
         """
-        #joueur1 gagne
         partie = self.état_partie()
         if partie['joueurs'][0]['position'][1] == 9:
             return partie['joueurs'][0]['nom']
 
-        #joueur2 gagne
         if partie['joueurs'][1]['position'][1] == 1:
             return partie['joueurs'][1]['nom']
 
@@ -408,17 +401,13 @@ class Quoridor:
         dist_joueur = nx.shortest_path_length(graphe, source, cible)
         dist_adv = nx.shortest_path_length(graphe, source_adv, cible_adv)
 
-        # ==================================================
-        # 1. VICTOIRE IMMÉDIATE
-        # ==================================================
+
         if dist_joueur <= 2:
             chemin = nx.shortest_path(graphe, source, cible)
             x, y = chemin[1]
             return 'D', [x, y]
 
-        # ==================================================
-        # 2. BLOCAGE OBLIGATOIRE (LOGIQUE CORRECTE)
-        # ==================================================
+
         if (
             dist_adv <= 2
             and dist_joueur >= 3
@@ -426,7 +415,6 @@ class Quoridor:
         ):
             état = self.état_partie()
 
-            # tester TOUS les murs possibles
             for x in range(1, 9):
                 for y in range(1, 9):
                     for coup in ('MH', 'MV'):
@@ -438,7 +426,6 @@ class Quoridor:
                         try:
                             copie.appliquer_un_coup(joueur, coup, [x, y])
 
-                            # recalculer la distance adverse
                             g2 = construire_graphe(
                                 [j['position'] for j in copie.joueurs],
                                 copie.murs['horizontaux'],
@@ -454,9 +441,7 @@ class Quoridor:
                         except QuoridorError:
                             pass
 
-        # ==================================================
-        # 3. DÉPLACEMENT PAR DÉFAUT
-        # ==================================================
+
         chemin = nx.shortest_path(graphe, source, cible)
         x, y = chemin[1]
         return 'D', [x, y]
