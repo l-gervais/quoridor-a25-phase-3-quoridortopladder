@@ -1,172 +1,183 @@
 import turtle
-import networkx as nx
-from quoridor import Quoridor, QuoridorError, construire_graphe
+from quoridor import Quoridor, QuoridorError
+
 
 class QuoridorX(Quoridor):
+    """Version graphique interactive de Quoridor (turtle)."""
+
+    # ==========================================================
+    # CONSTRUCTEUR
+    # ==========================================================
     def __init__(self, joueurs, murs=None, tour=1):
         super().__init__(joueurs, murs, tour)
 
-        # Initialisation turtle
+        # fenêtre
         self.screen = turtle.Screen()
         self.screen.title("QuoridorX")
+        self.screen.setup(800, 800)
+        self.screen.tracer(0)
+
+        # stylo principal
         self.pen = turtle.Turtle()
         self.pen.hideturtle()
         self.pen.speed(0)
+        self.pen.penup()
 
-        self.taille_case = 30
-        self.offset = -135  # pour centrer le damier
-        self.orientation_mur = 'H'  # par défaut horizontal
-        self.mode_action = 'D'      # par défaut déplacer pion
+        # stylo messages
+        self.msg = turtle.Turtle()
+        self.msg.hideturtle()
+        self.msg.penup()
 
-        # Lancer affichage initial
-        self.afficher()
+        # paramètres graphiques
+        self.case = 60
+        self.orig_x = -240
+        self.orig_y = -240
 
-        # Liaison clic souris et touches pour orientation mur
-        self.screen.onscreenclick(self.clic_plateau)
-        self.screen.onkey(lambda: self.changer_orientation('H'), "MH")
-        self.screen.onkey(lambda: self.changer_orientation('V'), "MV")
-        self.screen.onkey(lambda: self.changer_mode('D'), "d")  # pour déplacer pion
-        self.screen.onkey(lambda: self.changer_mode('M'), "m")  # pour poser mur
+        # état interaction
+        self.coup_prêt = False
+        self.position_coup = None
+        self.orientation_mur = "MH"
+        self.message_erreur = ""
+
+        # événements
+        self.screen.onclick(self.clic)
+        self.screen.onkey(lambda: self.set_orientation("MH"), "h")
+        self.screen.onkey(lambda: self.set_orientation("MV"), "v")
         self.screen.listen()
 
-    # ------------------ AFFICHAGE ------------------ #
+        self.afficher()
+
+    # ==========================================================
+    # AFFICHAGE
+    # ==========================================================
     def afficher(self):
         self.pen.clear()
+        self.msg.clear()
+
         self.dessiner_damier()
         self.dessiner_murs()
-        self.dessiner_pions()
+        self.dessiner_joueurs()
+        self.dessiner_legende()
+        self.afficher_message()
+
         self.screen.update()
 
     def dessiner_damier(self):
-        self.pen.up()
-        self.pen.goto(self.offset, self.offset)
-        self.pen.down()
-        for _ in range(4):
-            self.pen.forward(9 * self.taille_case)
-            self.pen.left(90)
+        for i in range(10):
+            self.pen.goto(self.orig_x + i * self.case, self.orig_y)
+            self.pen.pendown()
+            self.pen.goto(self.orig_x + i * self.case, self.orig_y + 9 * self.case)
+            self.pen.penup()
 
-        # lignes internes
-        for i in range(1, 9):
-            # horizontales
-            self.pen.up()
-            self.pen.goto(self.offset, self.offset + i*self.taille_case)
-            self.pen.down()
-            self.pen.forward(9*self.taille_case)
-            # verticales
-            self.pen.up()
-            self.pen.goto(self.offset + i*self.taille_case, self.offset)
-            self.pen.down()
-            self.pen.goto(self.offset + i*self.taille_case, self.offset + 9*self.taille_case)
+            self.pen.goto(self.orig_x, self.orig_y + i * self.case)
+            self.pen.pendown()
+            self.pen.goto(self.orig_x + 9 * self.case, self.orig_y + i * self.case)
+            self.pen.penup()
 
-    def dessiner_pions(self):
+    def dessiner_joueurs(self):
         couleurs = ["blue", "red"]
-        for i, joueur in enumerate(self.joueurs):
-            x, y = joueur["position"]
-            self.pen.up()
-            self.pen.goto(self.offset + (x-0.5)*self.taille_case, self.offset + (y-0.5)*self.taille_case)
-            self.pen.dot(self.taille_case*0.6, couleurs[i])
+        for i, j in enumerate(self.joueurs):
+            x, y = j["position"]
+            px, py = self.coord_case(x, y)
+            self.pen.goto(px, py - 15)
+            self.pen.color(couleurs[i])
+            self.pen.write(str(i + 1), align="center",
+                           font=("Arial", 24, "bold"))
 
     def dessiner_murs(self):
+        self.pen.color("brown")
+        self.pen.width(4)
+
+        for x, y in self.murs["horizontaux"]:
+            px, py = self.coord_case(x, y)
+            self.pen.goto(px - self.case / 2, py)
+            self.pen.pendown()
+            self.pen.goto(px + self.case * 1.5, py)
+            self.pen.penup()
+
+        for x, y in self.murs["verticaux"]:
+            px, py = self.coord_case(x, y)
+            self.pen.goto(px, py - self.case / 2)
+            self.pen.pendown()
+            self.pen.goto(px, py + self.case * 1.5)
+            self.pen.penup()
+
+        self.pen.width(1)
+
+    def dessiner_legende(self):
+        self.pen.goto(-360, 260)
         self.pen.color("black")
-        # murs horizontaux
-        for x, y in self.murs['horizontaux']:
-            self.pen.up()
-            self.pen.goto(self.offset + (x-1)*self.taille_case, self.offset + (y-1)*self.taille_case + self.taille_case/2)
-            self.pen.down()
-            self.pen.forward(2*self.taille_case)
-        # murs verticaux
-        for x, y in self.murs['verticaux']:
-            self.pen.up()
-            self.pen.goto(self.offset + (x-1)*self.taille_case + self.taille_case/2, self.offset + (y-1)*self.taille_case)
-            self.pen.down()
-            self.pen.goto(self.offset + (x-1)*self.taille_case + self.taille_case/2, self.offset + (y+1)*self.taille_case)
-
-    # ------------------ INTERACTION ------------------ #
-    def changer_orientation(self, orientation):
-        """Changer l'orientation du mur à placer"""
-        self.orientation_mur = orientation
-        print(f"Orientation du mur: {orientation}")
-
-    def changer_mode(self, mode):
-        """Changer le mode d'action: 'D' pour déplacer, 'M' pour mur"""
-        if mode in ['D', 'M']:
-            self.mode_action = mode
-            print(f"Mode d'action: {'Déplacer pion' if mode=='D' else 'Poser mur'}")
-
-    def clic_plateau(self, x, y):
-        """Gestion du clic du joueur"""
-        joueur = self.joueurs[0]['nom'] 
-
-        # Conversion du clic en coordonnées de case (1 à 9)
-        case_x = int((x - self.offset) // self.taille_case) + 1
-        case_y = int((y - self.offset) // self.taille_case) + 1
-
-        # S’assurer que la case est dans le plateau
-        case_x = max(1, min(9, case_x))
-        case_y = max(1, min(9, case_y))
-
-        try:
-            if self.mode_action == 'D':  # déplacement du pion
-                self.appliquer_un_coup(joueur, 'D', [case_x, case_y])
-
-            elif self.mode_action == 'M':  # poser un mur
-                # Déterminer la position du mur selon l’orientation
-                if self.orientation_mur.upper() == 'H':
-                    mur_x = max(1, min(8, case_x))  # colonnes 1 à 8 pour murs
-                    mur_y = max(2, min(9, case_y))
-                    coup_mur = 'MH'
-                else:  # vertical
-                    mur_x = max(2, min(9, case_x))
-                    mur_y = max(1, min(8, case_y))
-                    coup_mur = 'MV'
-
-                self.appliquer_un_coup(joueur, coup_mur, [mur_x, mur_y])
-
-            self.afficher()
-
-            # Jouer le tour du bot après le joueur
-            self.jouer_tour_bot()
-
-        except QuoridorError as e:
-            print(f"Erreur: {e}")
-
-    # BOT #
-    def jouer_tour_bot(self):
-        if self.partie_terminée():
-            print("Partie terminée !")
-            return
-
-        bot = self.joueurs[1]['nom']
-        try:
-            coup, position = self.jouer_un_coup(bot)
-            self.appliquer_un_coup(bot, coup, position)
-            self.afficher()
-        except QuoridorError as err:
-            print(f"Erreur bot: {err}")
-
-    #IA#
-    def jouer_un_coup(self, joueur):
-        ind = 0 if joueur == self.joueurs[0]['nom'] else 1
-        positions = [i['position'] for i in self.joueurs]
-        graphe = construire_graphe(
-            positions,
-            self.murs['horizontaux'],
-            self.murs['verticaux']
+        self.pen.write(
+            f"1 = {self.joueurs[0]['nom']} (murs: {self.joueurs[0]['murs']})\n"
+            f"2 = {self.joueurs[1]['nom']} (murs: {self.joueurs[1]['murs']})\n"
+            f"Orientation mur : h / v (actuelle: {self.orientation_mur})",
+            font=("Arial", 12, "normal")
         )
-        cible = 'B1' if ind == 0 else 'B2'
-        source = tuple(self.joueurs[ind]['position'])
-        chemin = nx.shortest_path(graphe, source=source, target=cible)
-        prochaine = chemin[1]
 
-        # Vérifier si on peut poser un mur pour bloquer l'adversaire
-        adv = self.joueurs[1-ind]['position']
-        dist_adv = len(nx.shortest_path(graphe, tuple(adv), 'B1' if ind==1 else 'B2'))
-        dist_self = len(chemin)
-        if self.joueurs[ind]['murs'] > 0 and dist_adv == 2 and dist_self > 2:
-            x, y = adv
-            if ind == 0:
-                return 'H', [x, y]  # horizontal
-            else:
-                return 'V', [x, y]  # vertical
-        else:
-            return 'D', [prochaine[0], prochaine[1]]
+    def afficher_message(self):
+        if self.message_erreur:
+            self.msg.goto(-360, -300)
+            self.msg.color("red")
+            self.msg.write(self.message_erreur,
+                           font=("Arial", 12, "bold"))
+
+    # ==========================================================
+    # INTERACTION UTILISATEUR
+    # ==========================================================
+    def set_orientation(self, o):
+        self.orientation_mur = o
+        self.message_erreur = ""
+        self.afficher()
+
+    def clic(self, x, y):
+        case_x = round((x - self.orig_x) / self.case + 0.5)
+        case_y = round((y - self.orig_y) / self.case + 0.5)
+
+        if 1 <= case_x <= 9 and 1 <= case_y <= 9:
+            self.position_coup = [case_x, case_y]
+            self.coup_prêt = True
+
+    # ==========================================================
+    # MÉTHODE CLÉ : sélection du coup (graphique)
+    # ==========================================================
+    def sélectionner_un_coup(self, joueur):
+        while True:
+            self.coup_prêt = False
+            self.message_erreur = ""
+            self.afficher()
+
+            while not self.coup_prêt:
+                self.screen.update()
+
+            # tester sur une COPIE
+            état = self.état_partie()
+            copie = Quoridor(
+                joueurs=état["joueurs"],
+                murs=état["murs"],
+                tour=état["tour"]
+            )
+
+            try:
+                copie.appliquer_un_coup(joueur, "D", self.position_coup)
+                return "D", self.position_coup
+
+            except QuoridorError:
+                try:
+                    copie.appliquer_un_coup(
+                        joueur,
+                        self.orientation_mur,
+                        self.position_coup
+                    )
+                    return self.orientation_mur, self.position_coup
+
+                except QuoridorError as err:
+                    # erreur attrapée → affichée → on recommence
+                    self.message_erreur = str(err)
+
+    # ==========================================================
+    # UTILITAIRE
+    # ==========================================================
+    def coord_case(self, x, y):
+        px = self.orig_x + (x - 1) * self.case + self.case / 2
+        py = self.orig_y + (y - 1) * self.case + self.case / 2
+        return px, py
